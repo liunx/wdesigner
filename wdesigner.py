@@ -8,16 +8,20 @@ import xml.etree.ElementTree as ET
 # generate html file
 def genhtml(root, fmt, layer):
     if root.tag == 'interface':
-        print((" " * fmt * layer) + "<%s>" % root.tag)
+        print("<!DOCTYPE html>")
+        print((" " * fmt * layer) + "<html><head>")
+        print((" " * fmt * layer) + "<link rel=\"stylesheet\" type=\"text/css\" href=\"mystyle.css\" />")
+        print((" " * fmt * layer) + "</head>")
+        print((" " * fmt * layer) + "<body>")
         for child in root:
             genhtml(child, fmt, layer + 1)
-        print((" " * fmt * layer) + "</%s>" % root.tag)
+        print((" " * fmt * layer) + "</body></html>")
     elif root.tag == 'object':
         if root.attrib['class'] == 'GtkGrid':
-            print((" " * fmt * layer) + "<%s>" % root.attrib['class'])
-            # print properties
+            '''
             for prop in root.findall('property'):
                 print("%s=%s" % (prop.attrib['name'], prop.text))
+            '''
             mylist = [[None for col in range(20)] for row in range(20)]
             col = 0
             row = 0
@@ -30,19 +34,27 @@ def genhtml(root, fmt, layer):
                             col = int(prop.text)
                 mylist[col][row] = child
             for col in range(20):
+                print((" " * fmt * (layer + 1)) + "<div id=\"top\">")
                 for row in range(20):
                     child = mylist[col][row]
                     if child is not None:
+                        print((" " * fmt * (layer + 1)) + "<div id=\"left\">")
                         for obj in child.findall('object'):
                             if obj.attrib['class'] == 'GtkButton':
-                                print((" " * fmt * (layer + 1)) + "<%s>" % obj.attrib['class'])
-                                print(obj.attrib)
-                                print((" " * fmt * (layer + 1)) + "</%s>" % obj.attrib['class'])
+                                print((" " * fmt * (layer + 2)) + "<form>")
+                                # get button label
+                                label = ''
+                                for prop in obj.findall('property'):
+                                    if prop.attrib['name'] == 'label':
+                                        label = prop.text
+                                        break
+                                print((" " * fmt * (layer + 2)) + "<input type=\"button\" value=\"%s\">" % label)
+                                print((" " * fmt * (layer + 2)) + "</form>")
                             else:
                                 genhtml(obj, fmt, layer + 1)
-            print((" " * fmt * layer) + "</%s>" % root.attrib['class'])
+                        print((" " * fmt * (layer + 1)) + "</div>")
+                print((" " * fmt * (layer + 1)) + "</div>")
         elif root.attrib['class'] == 'GtkBox':
-            print((" " * fmt * layer) + "<%s>" % root.attrib['class'])
             # checking orientation vertical?
             orientation = 'H'
             for prop in root.findall('property'):
@@ -60,14 +72,24 @@ def genhtml(root, fmt, layer):
             for col in range(20):
                 child = mylist[col]
                 if child is not None:
+                    if orientation == 'H':
+                        print((" " * fmt * (layer + 1)) + "<div id=\"left\">")
+                    else:
+                        print((" " * fmt * (layer + 1)) + "<div id=\"top\">")
                     for obj in child.findall('object'):
                         if obj.attrib['class'] == 'GtkButton':
-                            print((" " * fmt * (layer + 1)) + "<%s>" % obj.attrib['class'])
-                            print(obj.attrib)
-                            print((" " * fmt * (layer + 1)) + "</%s>" % obj.attrib['class'])
+                            print((" " * fmt * (layer + 2)) + "<form>")
+                            # get button label
+                            label = ''
+                            for prop in obj.findall('property'):
+                                if prop.attrib['name'] == 'label':
+                                    label = prop.text
+                                    break
+                            print((" " * fmt * (layer + 2)) + "<input type=\"button\" value=\"%s\">" % label)
+                            print((" " * fmt * (layer + 2)) + "</form>")
                         else:
                             genhtml(obj, fmt, layer + 1)
-            print((" " * fmt * layer) + "</%s>" % root.attrib['class'])
+                    print((" " * fmt * (layer + 1)) + "</div>")
         else:
             for child in root:
                 genhtml(child, fmt, layer)
